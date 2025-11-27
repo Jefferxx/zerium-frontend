@@ -4,7 +4,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import PropertyDetails from './pages/dashboard/PropertyDetails';
 import CreateProperty from './pages/dashboard/CreateProperty';
-import CreateContract from './pages/dashboard/CreateContract'; // <--- Importación Nueva
+import CreateContract from './pages/dashboard/CreateContract1'; // <--- Importación Nueva
 
 // Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }) => {
@@ -42,6 +42,10 @@ function App() {
 
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
+        {/*Rutas de Contratos y Pagos*/} 
+        <Route path="contracts" element={<ContractsList />} />
+        <Route path="contracts/:id" element={<ContractDetails />} />
       </Routes>
     </BrowserRouter>
   );
