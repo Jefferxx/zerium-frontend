@@ -3,10 +3,10 @@ import LoginPage from './pages/auth/LoginPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import PropertyDetails from './pages/dashboard/PropertyDetails';
-import CreateProperty from './pages/dashboard/CreateProperty'; // <--- IMPORTAR
+import CreateProperty from './pages/dashboard/CreateProperty';
+import CreateContract from './pages/dashboard/CreateContract'; // <--- Importación Nueva
 
-// Componente para proteger rutas privadas (Guard)
-// Si no hay token en localStorage, redirige al login.
+// Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -28,17 +28,16 @@ function App() {
             <DashboardLayout />
           </ProtectedRoute>
         }>
-          {/* Página Principal del Dashboard */}
+          {/* 1. Resumen General */}
           <Route index element={<DashboardHome />} />
           
-          {/* Nueva Propiedad */}
-          <Route path="properties/new" element={<CreateProperty />} /> {/* <--- NUEVA RUTA */}
-          
-          {/* Detalle de Propiedad */}
+          {/* 2. Módulo de Propiedades */}
+          <Route path="properties/new" element={<CreateProperty />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
-
+          
+          {/* 3. Módulo de Contratos (NUEVA RUTA) */}
           <Route path="contracts/new" element={<CreateContract />} />
-
+          
         </Route>
 
         {/* Redirección por defecto */}

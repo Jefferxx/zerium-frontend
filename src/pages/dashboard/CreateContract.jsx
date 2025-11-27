@@ -6,11 +6,9 @@ import { createContract } from '../../services/contractService';
 import { FileText, User, Calendar, DollarSign, Save, Loader2, ArrowLeft, Building, AlertCircle } from 'lucide-react';
 
 export default function CreateContract() {
-  // Eliminamos clearErrors que no se usaba
   const { register, handleSubmit, watch, setValue, setError, formState: { errors } } = useForm();
   const [properties, setProperties] = useState([]);
-  // Eliminamos selectedProperty si solo lo usábamos para lógica interna y no visualización
-  // O lo mantenemos si queremos mostrar info extra del edificio seleccionado
+  // Eliminada la variable 'selectedProperty' que no se usaba
   const [availableUnits, setAvailableUnits] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState('');
@@ -42,17 +40,15 @@ export default function CreateContract() {
       
       const prop = properties.find(p => p.id === propertyIdParam);
       if (prop) {
-        // Filtrar solo unidades disponibles
+        // Eliminada la asignación a selectedProperty
         const units = prop.units.filter(u => u.status === 'available');
         setAvailableUnits(units);
 
         if (unitIdParam) {
-          // Verificar si la unidad preseleccionada está disponible
           const isUnitAvailable = units.some(u => u.id === unitIdParam);
           if (isUnitAvailable) {
              setTimeout(() => {
                  setValue("unit_id", unitIdParam);
-                 // Auto-llenar el precio base si existe
                  const targetUnit = units.find(u => u.id === unitIdParam);
                  if(targetUnit) setValue("amount", targetUnit.base_price);
              }, 100);
@@ -69,9 +65,10 @@ export default function CreateContract() {
   useEffect(() => {
     if (watchedPropertyId && watchedPropertyId !== propertyIdParam) {
         const prop = properties.find(p => p.id === watchedPropertyId);
+        // Eliminada la asignación a selectedProperty
         setAvailableUnits(prop?.units.filter(u => u.status === 'available') || []);
         setValue("unit_id", ""); 
-        setValue("amount", ""); // Limpiar precio al cambiar edificio
+        setValue("amount", "");
     }
   }, [watchedPropertyId, properties, setValue, propertyIdParam]);
 
@@ -89,7 +86,6 @@ export default function CreateContract() {
     setIsLoading(true);
     setServerError('');
     
-    // Validación extra de fechas
     if (new Date(data.start_date) > new Date(data.end_date)) {
         setError("end_date", { type: "manual", message: "La fecha fin debe ser posterior a la de inicio" });
         setIsLoading(false);
@@ -149,7 +145,6 @@ export default function CreateContract() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-        
         {/* SECCIÓN 1: PROPIEDAD */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
           <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
