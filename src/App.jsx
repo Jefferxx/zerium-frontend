@@ -36,6 +36,9 @@ function App() {
           
           {/* Detalle de Propiedad */}
           <Route path="properties/:id" element={<PropertyDetails />} />
+
+          <Route path="contracts/new" element={<CreateContract />} />
+
         </Route>
 
         {/* Redirección por defecto */}
