@@ -5,16 +5,13 @@ import DashboardHome from './pages/dashboard/DashboardHome';
 import PropertyDetails from './pages/dashboard/PropertyDetails';
 import CreateProperty from './pages/dashboard/CreateProperty';
 import CreateContract from './pages/dashboard/NewContract';
-// --- NUEVOS IMPORTS QUE FALTABAN ---
 import ContractsList from './pages/dashboard/ContractList';
 import ContractDetails from './pages/dashboard/ContractDetails';
+import CreateTicket from './pages/dashboard/CreateTicket'; // ✅ Import correcto
 
-// Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!token) return <Navigate to="/login" replace />;
   return children;
 };
 
@@ -22,30 +19,33 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Ruta Pública: Login */}
+        {/* Ruta Pública */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Rutas Privadas: Dashboard (Requieren Token) */}
+        {/* Rutas Privadas: Dashboard */}
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <DashboardLayout />
           </ProtectedRoute>
         }>
-          {/* 1. Resumen General */}
+          {/* 1. Resumen */}
           <Route index element={<DashboardHome />} />
           
-          {/* 2. Módulo de Propiedades */}
+          {/* 2. Propiedades */}
           <Route path="properties/new" element={<CreateProperty />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
           
-          {/* 3. Módulo de Contratos */}
+          {/* 3. Contratos */}
           <Route path="contracts/new" element={<CreateContract />} />
           <Route path="contracts" element={<ContractsList />} />
           <Route path="contracts/:id" element={<ContractDetails />} />
           
+          {/* 4. Mantenimiento (Tickets) */}
+          <Route path="tickets/new" element={<CreateTicket />} /> {/* ✅ AQUÍ VA */}
+          
         </Route>
 
-        {/* Redirección por defecto */}
+        {/* Redirección */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>
