@@ -43,10 +43,17 @@ export default function ContractsList() {
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Contrato #{contract.id.slice(0, 8)}...</h3>
+                  {/* CORRECCIÓN 1: Título legible usando datos anidados (Tenant + Unidad) */}
+                  <h3 className="font-bold text-gray-900 text-lg">
+                    {contract.tenant?.email || "Inquilino"} 
+                    <span className="text-gray-400 font-normal px-2">en</span> 
+                    {contract.unit?.unit_number || "Unidad"}
+                  </h3>
+
+                  {/* CORRECCIÓN 2: Fechas formateadas */}
                   <div className="flex items-center text-sm text-gray-500 mt-1">
                     <Calendar className="w-3 h-3 mr-1" /> 
-                    {contract.start_date} - {contract.end_date}
+                    {new Date(contract.start_date).toLocaleDateString()} - {new Date(contract.end_date).toLocaleDateString()}
                   </div>
                 </div>
               </div>
@@ -54,7 +61,8 @@ export default function ContractsList() {
               <div className="flex flex-col md:flex-row gap-6 mt-4 md:mt-0 w-full md:w-auto items-center text-sm text-gray-600">
                 <div className="flex items-center">
                     <User className="w-4 h-4 mr-1.5" /> 
-                    Inquilino ID: {contract.tenant_id.slice(0, 8)}...
+                    {/* CORRECCIÓN 3: Nombre o estado del inquilino */}
+                    {contract.tenant?.full_name || contract.tenant?.email?.split('@')[0] || "Usuario Registrado"}
                 </div>
                 <div className="font-semibold text-lg text-primary">
                     ${contract.amount} / mes
@@ -62,7 +70,7 @@ export default function ContractsList() {
                 
                 <Link 
                   to={`/dashboard/contracts/${contract.id}`}
-                  className="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-primary hover:text-white transition flex items-center"
+                  className="px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-primary hover:text-white transition flex items-center shadow-sm"
                 >
                   Ver Pagos <ArrowRight className="w-4 h-4 ml-1" />
                 </Link>

@@ -4,7 +4,10 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import PropertyDetails from './pages/dashboard/PropertyDetails';
 import CreateProperty from './pages/dashboard/CreateProperty';
-import CreateContract from './pages/dashboard/CreateContract1'; // <--- Importación Nueva
+import CreateContract from './pages/dashboard/NewContract';
+// --- NUEVOS IMPORTS QUE FALTABAN ---
+import ContractsList from './pages/dashboard/ContractList';
+import ContractDetails from './pages/dashboard/ContractDetails';
 
 // Componente para proteger rutas privadas
 const ProtectedRoute = ({ children }) => {
@@ -35,17 +38,15 @@ function App() {
           <Route path="properties/new" element={<CreateProperty />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
           
-          {/* 3. Módulo de Contratos (NUEVA RUTA) */}
+          {/* 3. Módulo de Contratos */}
           <Route path="contracts/new" element={<CreateContract />} />
+          <Route path="contracts" element={<ContractsList />} />
+          <Route path="contracts/:id" element={<ContractDetails />} />
           
         </Route>
 
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
-
-        {/*Rutas de Contratos y Pagos*/} 
-        <Route path="contracts" element={<ContractsList />} />
-        <Route path="contracts/:id" element={<ContractDetails />} />
       </Routes>
     </BrowserRouter>
   );

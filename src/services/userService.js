@@ -1,10 +1,25 @@
 import api from './api';
 
-// Función para registrar un inquilino desde el panel del dueño (opcional)
-export const registerTenant = async (tenantData) => {
-  // Asumiendo que tienes un endpoint para esto o usas el registro público
-  // Por ahora, usaremos el registro normal pero forzando el rol
-  const payload = { ...tenantData, role: 'tenant' };
-  const response = await api.post('/users', payload);
+// Obtener todos los usuarios (Rol admin o visualización general)
+export const getAllUsers = async () => {
+  const response = await api.get('/users');
   return response.data;
+};
+
+// --- NUEVO: Función para buscar ID por Email ---
+export const getTenantIdByEmail = async (email) => {
+  try {
+    // 1. Traemos la lista de usuarios
+    // (Nota: En producción idealmente tendrías un endpoint /users/search?email=x)
+    const users = await getAllUsers();
+    
+    // 2. Buscamos coincidencia exacta ignorando mayúsculas
+    const tenant = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    if (!tenant) return null;
+    return tenant.id; // Retorna el UUID (ej: "a1b2-c3d4-e5f6...")
+  } catch (error) {
+    console.error("Error buscando inquilino:", error);
+    return null;
+  }
 };
