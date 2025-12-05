@@ -8,6 +8,7 @@ import CreateContract from './pages/dashboard/NewContract';
 import ContractsList from './pages/dashboard/ContractList';
 import ContractDetails from './pages/dashboard/ContractDetails';
 import CreateTicket from './pages/dashboard/CreateTicket'; // ✅ Import correcto
+import TicketList from './pages/dashboard/ticketList';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -30,19 +31,20 @@ function App() {
         }>
           {/* 1. Resumen */}
           <Route index element={<DashboardHome />} />
-          
+
           {/* 2. Propiedades */}
           <Route path="properties/new" element={<CreateProperty />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
-          
+
           {/* 3. Contratos */}
           <Route path="contracts/new" element={<CreateContract />} />
           <Route path="contracts" element={<ContractsList />} />
           <Route path="contracts/:id" element={<ContractDetails />} />
-          
+
           {/* 4. Mantenimiento (Tickets) */}
           <Route path="tickets/new" element={<CreateTicket />} /> {/* ✅ AQUÍ VA */}
-          
+          <Route path="tickets" element={<TicketList />} />
+
         </Route>
 
         {/* Redirección */}
