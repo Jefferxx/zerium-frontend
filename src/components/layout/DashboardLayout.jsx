@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { logout } from '../../services/authService';
-import { 
-  LayoutDashboard, 
-  Building2, 
-  Users, 
-  FileText, 
-  LogOut, 
-  Menu, 
-  X 
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+  Wrench // <--- 1. NUEVO IMPORT
 } from 'lucide-react';
 
 export default function DashboardLayout() {
@@ -24,17 +25,17 @@ export default function DashboardLayout() {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Resumen', path: '/dashboard' },
     { icon: Building2, label: 'Propiedades', path: '/dashboard/properties' },
-    { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants' },
+    // { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants' }, // Opcional si no tienes pantalla aún
     { icon: FileText, label: 'Contratos', path: '/dashboard/contracts' },
+    { icon: Wrench, label: 'Mantenimiento', path: '/dashboard/tickets' }, // <--- 2. NUEVO ÍTEM DE MENÚ
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside 
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="h-full flex flex-col">
           {/* Logo */}
@@ -46,16 +47,17 @@ export default function DashboardLayout() {
           {/* Menu */}
           <nav className="flex-1 px-4 py-6 space-y-1">
             {menuItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              // Lógica para mantener activo el botón si estamos en una subruta (ej: tickets/new)
+              const isActive = location.pathname.startsWith(item.path) && (item.path !== '/dashboard' || location.pathname === '/dashboard');
+
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors ${
-                    isActive 
-                      ? 'bg-blue-50 text-primary' 
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors ${isActive
+                      ? 'bg-blue-50 text-primary'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                    }`}
                 >
                   <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
                   {item.label}
@@ -87,7 +89,7 @@ export default function DashboardLayout() {
           </button>
         </header>
 
-        {/* Page Content (Outlet renderiza la página hija) */}
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-8">
           <Outlet />
         </main>
