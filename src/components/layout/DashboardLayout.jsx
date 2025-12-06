@@ -24,30 +24,30 @@ export default function DashboardLayout() {
   };
 
   const menuItems = [
-    { 
-      icon: LayoutDashboard, 
-      label: 'Resumen', 
+    {
+      icon: LayoutDashboard,
+      label: 'Resumen',
       path: '/dashboard',
       roles: ['landlord', 'tenant'] // Visible para todos
     },
-    { 
-      icon: Building2, 
-      label: 'Propiedades', 
+    {
+      icon: Building2,
+      label: 'Propiedades',
       path: '/dashboard/properties',
       roles: ['landlord'] // Solo visible para Landlords
     },
     // { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants', roles: ['landlord'] },
-    { 
-      icon: FileText, 
-      label: 'Contratos', 
+    {
+      icon: FileText,
+      label: 'Contratos',
       path: '/dashboard/contracts',
       roles: ['landlord', 'tenant'] // Ambos pueden ver (el back filtra)
     },
-    { 
-      icon: Wrench, 
-      label: 'Mantenimiento', 
+    {
+      icon: Wrench,
+      label: 'Mantenimiento',
       path: '/dashboard/tickets',
-      roles: ['landlord', 'tenant'] 
+      roles: ['landlord', 'tenant']
     },
   ];
 
@@ -78,8 +78,8 @@ export default function DashboardLayout() {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-colors ${isActive
-                      ? 'bg-blue-50 text-primary'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-blue-50 text-primary'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                 >
                   <item.icon className={`w-5 h-5 mr-3 ${isActive ? 'text-primary' : 'text-gray-400'}`} />
