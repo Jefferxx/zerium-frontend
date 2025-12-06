@@ -18,6 +18,9 @@ export default function DashboardLayout() {
   const location = useLocation();
   const role = getCurrentRole(); // <--- OBTENEMOS EL ROL
 
+
+  console.log("🔍 ROL DETECTADO:", role);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
