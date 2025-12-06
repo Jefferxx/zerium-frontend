@@ -1,36 +1,43 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Importar useNavigate
+import { useParams, useNavigate } from 'react-router-dom';
 import { getPropertyById } from '../../services/propertyService';
-import { Building2, MapPin, Bed, Bath, Maximize, ArrowLeft, Loader2 } from 'lucide-react';
+import { Building2, MapPin, Bed, Bath, Maximize, ArrowLeft, Loader2, Pencil } from 'lucide-react';
+import EditUnitModal from '../../components/modals/EditUnitModal'; // Importamos el modal
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const navigate = useNavigate(); // Inicializar hook
+  const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // ESTADO PARA CONTROLAR QUÉ UNIDAD SE ESTÁ EDITANDO
+  const [editingUnit, setEditingUnit] = useState(null);
 
   useEffect(() => {
-    async function loadProperty() {
-      try {
-        const data = await getPropertyById(id);
-        setProperty(data);
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     loadProperty();
   }, [id]);
 
-  // FUNCIÓN PARA EL BOTÓN "GESTIONAR"
+  async function loadProperty() {
+    try {
+      const data = await getPropertyById(id);
+      setProperty(data);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Función para recargar datos después de editar
+  const handleUnitUpdated = () => {
+    loadProperty(); // Recargamos los datos del servidor
+  };
+
   const handleManageUnit = (unit) => {
     if (unit.status === 'available') {
-      // Si está disponible, vamos a crear contrato pre-seleccionando esta unidad
       navigate(`/dashboard/contracts/new?propertyId=${property.id}&unitId=${unit.id}`);
     } else {
-      // Si está ocupada, mostramos un aviso (futura implementación: ver contrato)
-      alert("Esta unidad ya está alquilada. Pronto podrás ver el contrato aquí.");
+      alert("Esta unidad ya está alquilada.");
     }
   };
 
@@ -43,6 +50,7 @@ export default function PropertyDetails() {
         <ArrowLeft className="w-4 h-4 mr-1" /> Volver
       </button>
 
+      {/* Header de Propiedad */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="h-48 bg-gradient-to-r from-blue-600 to-indigo-700 relative p-8 flex items-end">
           <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-lg text-white text-xs font-bold uppercase">
@@ -63,6 +71,7 @@ export default function PropertyDetails() {
         {property.units.map((unit) => (
           <div key={unit.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-center hover:shadow-md transition">
             
+            {/* Info Izquierda */}
             <div className="flex items-center gap-4 w-full md:w-auto">
               <div className={`p-3 rounded-full ${unit.status === 'available' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                 <Building2 className="w-6 h-6" />
@@ -75,19 +84,30 @@ export default function PropertyDetails() {
               </div>
             </div>
 
+            {/* Detalles Técnicos */}
             <div className="flex gap-6 text-gray-600 text-sm my-4 md:my-0">
               <div className="flex items-center"><Bed className="w-4 h-4 mr-1.5" /> {unit.bedrooms}</div>
               <div className="flex items-center"><Bath className="w-4 h-4 mr-1.5" /> {Number(unit.bathrooms)}</div>
               <div className="flex items-center"><Maximize className="w-4 h-4 mr-1.5" /> {Number(unit.area_m2)} m²</div>
             </div>
 
+            {/* Acciones (Derecha) */}
             <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-              <div className="text-right">
+              <div className="text-right mr-2">
                 <p className="text-xs text-gray-400">Precio Base</p>
                 <p className="text-xl font-bold text-primary">${unit.base_price}</p>
               </div>
               
-              {/* BOTÓN INTELIGENTE */}
+              {/* BOTÓN EDITAR (NUEVO) */}
+              <button 
+                onClick={() => setEditingUnit(unit)}
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"
+                title="Editar unidad"
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+
+              {/* BOTÓN GESTIONAR */}
               <button 
                 onClick={() => handleManageUnit(unit)}
                 className={`px-4 py-2 rounded-lg transition text-sm font-medium shadow-sm ${
@@ -103,6 +123,16 @@ export default function PropertyDetails() {
           </div>
         ))}
       </div>
+
+      {/* RENDERIZADO DEL MODAL (Solo si hay unidad seleccionada) */}
+      {editingUnit && (
+        <EditUnitModal 
+          unit={editingUnit} 
+          onClose={() => setEditingUnit(null)} 
+          onUpdated={handleUnitUpdated}
+        />
+      )}
+
     </div>
   );
 }
