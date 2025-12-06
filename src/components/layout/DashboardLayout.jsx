@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { logout } from '../../services/authService';
+import { logout, getCurrentRole } from '../../services/authService'; // <--- IMPORTAMOS getCurrentRole
 import {
   LayoutDashboard,
   Building2,
@@ -9,13 +9,14 @@ import {
   LogOut,
   Menu,
   X,
-  Wrench // <--- 1. NUEVO IMPORT
+  Wrench
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const role = getCurrentRole(); // <--- OBTENEMOS EL ROL
 
   const handleLogout = () => {
     logout();
@@ -23,11 +24,31 @@ export default function DashboardLayout() {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Resumen', path: '/dashboard' },
-    { icon: Building2, label: 'Propiedades', path: '/dashboard/properties' },
-    // { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants' }, // Opcional si no tienes pantalla aún
-    { icon: FileText, label: 'Contratos', path: '/dashboard/contracts' },
-    { icon: Wrench, label: 'Mantenimiento', path: '/dashboard/tickets' }, // <--- 2. NUEVO ÍTEM DE MENÚ
+    { 
+      icon: LayoutDashboard, 
+      label: 'Resumen', 
+      path: '/dashboard',
+      roles: ['landlord', 'tenant'] // Visible para todos
+    },
+    { 
+      icon: Building2, 
+      label: 'Propiedades', 
+      path: '/dashboard/properties',
+      roles: ['landlord'] // Solo visible para Landlords
+    },
+    // { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants', roles: ['landlord'] },
+    { 
+      icon: FileText, 
+      label: 'Contratos', 
+      path: '/dashboard/contracts',
+      roles: ['landlord', 'tenant'] // Ambos pueden ver (el back filtra)
+    },
+    { 
+      icon: Wrench, 
+      label: 'Mantenimiento', 
+      path: '/dashboard/tickets',
+      roles: ['landlord', 'tenant'] 
+    },
   ];
 
   return (
@@ -47,7 +68,9 @@ export default function DashboardLayout() {
           {/* Menu */}
           <nav className="flex-1 px-4 py-6 space-y-1">
             {menuItems.map((item) => {
-              // Lógica para mantener activo el botón si estamos en una subruta (ej: tickets/new)
+              // 1. FILTRO DE SEGURIDAD VISUAL: Si el rol no está permitido, no renderizamos nada
+              if (!item.roles.includes(role)) return null;
+
               const isActive = location.pathname.startsWith(item.path) && (item.path !== '/dashboard' || location.pathname === '/dashboard');
 
               return (
