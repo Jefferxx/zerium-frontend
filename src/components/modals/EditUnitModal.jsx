@@ -9,7 +9,8 @@ export default function EditUnitModal({ unit, onClose, onUpdated }) {
       base_price: unit.base_price,
       bathrooms: Number(unit.bathrooms),
       bedrooms: unit.bedrooms,
-      unit_number: unit.unit_number
+      unit_number: unit.unit_number,
+      area_m2: Number(unit.area_m2) || 0 // <--- 1. Cargar valor actual
     }
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -17,16 +18,16 @@ export default function EditUnitModal({ unit, onClose, onUpdated }) {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Enviamos solo lo que cambió (o todo, el backend lo maneja)
       await updateUnit(unit.id, {
         base_price: parseFloat(data.base_price),
         bathrooms: parseFloat(data.bathrooms),
         bedrooms: parseInt(data.bedrooms),
-        unit_number: data.unit_number
+        unit_number: data.unit_number,
+        area_m2: parseFloat(data.area_m2) // <--- 2. Enviar al backend
       });
       
-      onUpdated(); // Avisar al padre que recargue
-      onClose();   // Cerrar modal
+      onUpdated(); 
+      onClose();   
     } catch (error) {
       alert("Error al actualizar la unidad");
       console.error(error);
@@ -56,6 +57,14 @@ export default function EditUnitModal({ unit, onClose, onUpdated }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Precio ($)</label>
               <input type="number" step="0.01" {...register("base_price")} className="w-full px-4 py-2 border rounded-lg" />
             </div>
+            {/* --- 3. NUEVO CAMPO DE ÁREA --- */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Área (m²)</label>
+              <input type="number" step="0.01" {...register("area_m2")} className="w-full px-4 py-2 border rounded-lg" placeholder="Ej: 85" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Habitaciones</label>
               <input type="number" {...register("bedrooms")} className="w-full px-4 py-2 border rounded-lg" />
