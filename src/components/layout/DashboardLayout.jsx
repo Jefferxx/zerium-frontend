@@ -69,7 +69,7 @@ export default function DashboardLayout() {
           <nav className="flex-1 px-4 py-6 space-y-1">
             {menuItems.map((item) => {
               // 1. FILTRO DE SEGURIDAD VISUAL: Si el rol no está permitido, no renderizamos nada
-              if (!item.roles.includes(role)) return null;
+              if (item.roles && !item.roles.includes(role)) return null;
 
               const isActive = location.pathname.startsWith(item.path) && (item.path !== '/dashboard' || location.pathname === '/dashboard');
 
