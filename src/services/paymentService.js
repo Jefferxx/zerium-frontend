@@ -1,22 +1,14 @@
 import api from './api';
 
-// CORRECCIÓN 1: Usar query params para filtrar
-export const getPaymentsByContract = async (contractId) => {
-  // Esto genera: GET /payments?contract_id=...
-  const response = await api.get('/payments', {
-    params: { contract_id: contractId }
-  });
-  return response.data;
-};
-
-// CORRECCIÓN 2: Asegurar la ruta base para el POST
-export const createPaymentObligation = async (paymentData) => {
+// Registrar un nuevo pago
+export const createPayment = async (paymentData) => {
+  // paymentData debe tener: { contract_id, amount, payment_method, notes }
   const response = await api.post('/payments/', paymentData);
   return response.data;
 };
 
-// CORRECCIÓN 3: Apuntar al endpoint específico de "pay"
-export const registerPayment = async (paymentId, paymentData) => {
-  const response = await api.put(`/payments/${paymentId}/pay`, paymentData);
+// Obtener historial de pagos de un contrato
+export const getContractPayments = async (contractId) => {
+  const response = await api.get(`/payments/contract/${contractId}`);
   return response.data;
 };
