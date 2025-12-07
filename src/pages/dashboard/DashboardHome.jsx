@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom'; // <--- IMPORTANTE: Necesario para los botones
 import {
   Building2,
   Users,
@@ -106,12 +107,32 @@ export default function DashboardHome() {
 
         </div>
 
-        {/* Sección de Accesos Rápidos (Opcional) */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white">
-          <h2 className="text-xl font-bold mb-2">¿Qué quieres hacer hoy?</h2>
-          <p className="text-blue-100 mb-6">Gestiona tus propiedades de forma rápida.</p>
-          <div className="flex gap-4">
-            {/* Aquí podrías poner botones Link a /properties/new, etc. */}
+        {/* Sección de Accesos Rápidos (CORREGIDA CON BOTONES REALES) */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
+          {/* Decoración de fondo */}
+          <Building2 className="absolute -right-6 -bottom-6 w-40 h-40 text-white opacity-10" />
+
+          <div className="relative z-10">
+            <h2 className="text-2xl font-bold mb-2">¿Qué quieres hacer hoy?</h2>
+            <p className="text-blue-100 mb-6 max-w-lg">
+              Gestiona tu portafolio de manera eficiente. Crea nuevas propiedades o registra contratos en segundos.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/dashboard/properties/new"
+                className="bg-white text-blue-700 px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-50 transition shadow-sm flex items-center gap-2"
+              >
+                <Building2 className="w-4 h-4" /> Nueva Propiedad
+              </Link>
+
+              <Link
+                to="/dashboard/contracts/new"
+                className="bg-blue-800/50 text-white backdrop-blur-sm px-5 py-2.5 rounded-xl font-semibold hover:bg-blue-800 transition border border-blue-400/30 flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" /> Nuevo Contrato
+              </Link>
+            </div>
           </div>
         </div>
       </div>

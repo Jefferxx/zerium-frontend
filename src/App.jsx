@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage'; // <--- NUEVO IMPORT
+import RegisterPage from './pages/auth/RegisterPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
+import PropertiesList from './pages/dashboard/PropertiesList'; // <--- 1. IMPORT NUEVO
 import PropertyDetails from './pages/dashboard/PropertyDetails';
 import CreateProperty from './pages/dashboard/CreateProperty';
 import CreateContract from './pages/dashboard/NewContract';
@@ -25,7 +26,7 @@ function App() {
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} /> {/* <--- NUEVA RUTA */}
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Rutas Privadas: Dashboard (Requieren Token) */}
         <Route path="/dashboard" element={
@@ -37,6 +38,7 @@ function App() {
           <Route index element={<DashboardHome />} />
 
           {/* 2. Módulo de Propiedades */}
+          <Route path="properties" element={<PropertiesList />} /> {/* <--- 2. RUTA NUEVA */}
           <Route path="properties/new" element={<CreateProperty />} />
           <Route path="properties/:id" element={<PropertyDetails />} />
 
