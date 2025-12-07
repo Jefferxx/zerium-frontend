@@ -1,5 +1,6 @@
 import api from './api';
 
+// Iniciar Sesión
 export const login = async (email, password) => {
   const formData = new FormData();
   formData.append('username', email);
@@ -19,12 +20,21 @@ export const login = async (email, password) => {
   return response.data;
 };
 
+// Cerrar Sesión
 export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('role');   // Limpiamos al salir
   localStorage.removeItem('userId');
 };
 
+// Obtener Rol Actual
 export const getCurrentRole = () => {
   return localStorage.getItem('role');
+};
+
+// --- NUEVA FUNCIÓN: REGISTRO DE USUARIO ---
+export const registerUser = async (userData) => {
+  // userData debe ser un objeto: { email, password, full_name, phone_number, role }
+  const response = await api.post('/users/', userData);
+  return response.data;
 };
