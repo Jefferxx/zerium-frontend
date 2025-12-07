@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
-import { useNavigate, Link } from 'react-router-dom'; // <--- Importar Link
-import { Building2, Mail, Lock, Loader2 } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Building2, Mail, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import { login } from '../../services/authService';
 import { useState } from 'react';
 
@@ -8,6 +8,7 @@ export default function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
@@ -27,7 +28,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
-
+        
         {/* Header */}
         <div className="bg-primary p-8 text-center">
           <div className="mx-auto w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4 backdrop-blur-sm">
@@ -40,13 +41,14 @@ export default function LoginPage() {
         {/* Formulario */}
         <div className="p-8">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
+            
             {loginError && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
                 {loginError}
               </div>
             )}
 
+            {/* Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico</label>
               <div className="relative">
@@ -63,6 +65,7 @@ export default function LoginPage() {
               {errors.email && <span className="text-xs text-red-500">{errors.email.message}</span>}
             </div>
 
+            {/* Password con Ojito */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
               <div className="relative">
@@ -70,11 +73,18 @@ export default function LoginPage() {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   {...register("password", { required: "La contraseña es obligatoria" })}
-                  className="pl-10 block w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary border p-2.5"
+                  className="pl-10 pr-10 block w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary border p-2.5"
                   placeholder="••••••••"
                 />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
             </div>
 
@@ -87,7 +97,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* --- ENLACE DE REGISTRO (NUEVO) --- */}
+          {/* Enlace de Registro */}
           <div className="mt-6 text-center border-t border-gray-100 pt-4">
             <p className="text-sm text-gray-600">
               ¿Aún no tienes cuenta?{' '}
