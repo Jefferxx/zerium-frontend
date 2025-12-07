@@ -6,14 +6,13 @@ export const createContract = async (contractData) => {
   return response.data;
 };
 
-// Obtener todos los contratos (del usuario logueado)
-export const getContracts = async () => {
+// Obtener todos los contratos (RENOMBRADO A getMyContracts)
+export const getMyContracts = async () => {
   const response = await api.get('/contracts/');
   return response.data;
 };
 
-// --- ESTA ES LA QUE FALTABA ---
-// Obtener un contrato por ID (para el detalle)
+// Obtener un contrato por ID
 export const getContractById = async (id) => {
   const response = await api.get(`/contracts/${id}`);
   return response.data;
