@@ -1,19 +1,21 @@
 import api from './api';
 
-// Crear un nuevo ticket
+// 1. Crear un nuevo ticket
 export const createTicket = async (ticketData) => {
-  const response = await api.post('/tickets', ticketData);
+  const response = await api.post('/tickets/', ticketData);
   return response.data;
 };
 
-// Obtener todos los tickets
-export const getTickets = async () => {
-  const response = await api.get('/tickets');
+// 2. Obtener mis tickets
+// NOTA: Lo renombramos a 'getMyTickets' para que coincida con tu TicketList.jsx
+export const getMyTickets = async () => {
+  const response = await api.get('/tickets/');
   return response.data;
 };
 
-// Actualizar ticket (Resolver/Cerrar)
-export const updateTicket = async (ticketId, updateData) => {
-  const response = await api.put(`/tickets/${ticketId}`, updateData);
+// 3. Actualizar ESTADO del ticket (Nueva función PATCH)
+export const updateTicketStatus = async (ticketId, newStatus) => {
+  // Enviamos { status: 'in_progress' } al backend
+  const response = await api.patch(`/tickets/${ticketId}/status`, { status: newStatus });
   return response.data;
 };

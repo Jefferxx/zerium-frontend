@@ -1,133 +1,181 @@
 import { useEffect, useState } from 'react';
-import { getTickets, updateTicket } from '../../services/ticketService';
-import { getMyProperties } from '../../services/propertyService';
-import { Wrench, CheckCircle, AlertCircle, Clock, Filter, Building } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { 
+  Wrench, Plus, Filter, Clock, CheckCircle, 
+  AlertTriangle, Loader2, MoreVertical, PlayCircle, XCircle 
+} from 'lucide-react';
+import { getMyTickets, updateTicketStatus } from '../../services/ticketService';
+import { getCurrentRole } from '../../services/authService';
 
 export default function TicketList() {
   const [tickets, setTickets] = useState([]);
-  const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, open, resolved
+  const [filter, setFilter] = useState('all'); // 'all', 'pending', 'in_progress', 'resolved'
+  const role = getCurrentRole();
+  const [updatingId, setUpdatingId] = useState(null); // Para mostrar loading en el botón específico
+
+  // Cargar tickets
+  async function loadTickets() {
+    try {
+      const data = await getMyTickets();
+      // Ordenar: Pendientes primero, luego En Progreso, luego Resueltos
+      const sorted = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setTickets(sorted);
+    } catch (error) {
+      console.error("Error cargando tickets:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [ticketsData, propsData] = await Promise.all([
-          getTickets(),
-          getMyProperties()
-        ]);
-        setTickets(ticketsData);
-        setProperties(propsData);
-      } catch (error) {
-        console.error("Error cargando datos", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadData();
+    loadTickets();
   }, []);
 
-  // Función para resolver ticket
-  const handleResolve = async (id) => {
-    if (!confirm("¿Marcar este problema como RESUELTO?")) return;
-    
-    // Actualización optimista (cambia en UI primero)
-    setTickets(prev => prev.map(t => t.id === id ? { ...t, is_resolved: true } : t));
-
+  // Función para cambiar estado
+  const handleStatusChange = async (ticketId, newStatus) => {
+    setUpdatingId(ticketId);
     try {
-      await updateTicket(id, { is_resolved: true });
+      await updateTicketStatus(ticketId, newStatus);
+      await loadTickets(); // Recargar la lista para ver cambios
     } catch (error) {
-      alert("Error al actualizar");
-      // Revertir si falla
-      setTickets(prev => prev.map(t => t.id === id ? { ...t, is_resolved: false } : t));
+      console.error("Error actualizando ticket:", error);
+      alert("No se pudo actualizar el estado");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
-  // Helper para obtener nombre de propiedad
-  const getPropertyName = (id) => {
-    const prop = properties.find(p => p.id === id);
-    return prop ? prop.name : 'Propiedad Desconocida';
-  };
-
-  // Filtrado
-  const filteredTickets = tickets.filter(t => {
-    if (filter === 'open') return !t.is_resolved;
-    if (filter === 'resolved') return t.is_resolved;
-    return true;
+  // Filtrado visual
+  const filteredTickets = tickets.filter(ticket => {
+    if (filter === 'all') return true;
+    return ticket.status === filter;
   });
 
-  if (loading) return <div className="p-10 text-center">Cargando reportes...</div>;
+  // Configuración de Colores y Textos según estado
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case 'pending': return { color: 'bg-yellow-100 text-yellow-700', icon: AlertTriangle, label: 'Pendiente' };
+      case 'in_progress': return { color: 'bg-blue-100 text-blue-700', icon: PlayCircle, label: 'En Proceso' };
+      case 'resolved': return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Resuelto' };
+      case 'cancelled': return { color: 'bg-gray-100 text-gray-500', icon: XCircle, label: 'Cancelado' };
+      default: return { color: 'bg-gray-100', icon: Clock, label: status };
+    }
+  };
+
+  if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary" /></div>;
 
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 animate-fade-in">
+      
+      {/* HEADER */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Mantenimiento</h1>
-          <p className="text-sm text-gray-500">Gestión de incidentes y reparaciones</p>
+          <p className="text-gray-500">Gestiona las incidencias de tus propiedades.</p>
         </div>
-        
-        {/* Filtros */}
-        <div className="flex bg-gray-100 p-1 rounded-lg">
-          {['all', 'open', 'resolved'].map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
-                filter === f ? 'bg-white shadow text-gray-900' : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {f === 'all' ? 'Todos' : f === 'open' ? 'Pendientes' : 'Resueltos'}
-            </button>
-          ))}
-        </div>
+        <Link 
+          to="/dashboard/tickets/new" 
+          className="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition shadow-sm"
+        >
+          <Plus className="w-4 h-4" /> Nuevo Reporte
+        </Link>
       </div>
 
+      {/* TABS DE FILTRO */}
+      <div className="flex gap-2 overflow-x-auto pb-2 border-b border-gray-100">
+        {[
+          { id: 'all', label: 'Todos' },
+          { id: 'pending', label: 'Pendientes' },
+          { id: 'in_progress', label: 'En Proceso' },
+          { id: 'resolved', label: 'Resueltos' }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setFilter(tab.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
+              filter === tab.id 
+                ? 'bg-gray-900 text-white shadow-md' 
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* LISTA DE TICKETS */}
       <div className="grid gap-4">
         {filteredTickets.length === 0 ? (
-          <div className="text-center py-10 bg-white rounded-xl border border-dashed text-gray-400">
-            No hay tickets en esta categoría.
+          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
+            <Wrench className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-900">No hay tickets aquí</h3>
+            <p className="text-gray-500">Todo parece estar funcionando correctamente.</p>
           </div>
         ) : (
-          filteredTickets.map((ticket) => (
-            <div key={ticket.id} className={`bg-white p-5 rounded-xl border-l-4 shadow-sm ${ticket.is_resolved ? 'border-green-500' : 'border-red-500'}`}>
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
-                      ticket.priority === 'high' ? 'bg-red-100 text-red-700' : 
-                      ticket.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-700'
-                    }`}>
-                      {ticket.priority === 'high' ? 'Alta' : ticket.priority === 'medium' ? 'Media' : 'Baja'}
-                    </span>
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {new Date(ticket.created_at).toLocaleDateString()}
-                    </span>
+          filteredTickets.map((ticket) => {
+            const statusConfig = getStatusConfig(ticket.status);
+            const StatusIcon = statusConfig.icon;
+
+            return (
+              <div key={ticket.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition flex flex-col md:flex-row justify-between gap-4">
+                
+                {/* INFO IZQUIERDA */}
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 rounded-full ${statusConfig.color} flex-shrink-0`}>
+                    <StatusIcon className="w-6 h-6" />
                   </div>
-                  
-                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
-                    {ticket.is_resolved ? <CheckCircle className="w-5 h-5 text-green-500" /> : <AlertCircle className="w-5 h-5 text-red-500" />}
-                    {ticket.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 text-sm">{ticket.description}</p>
-                  
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                    <Building className="w-4 h-4" />
-                    {getPropertyName(ticket.property_id)}
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-lg">{ticket.title}</h3>
+                    <p className="text-gray-500 text-sm mt-1">{ticket.description}</p>
+                    
+                    <div className="flex flex-wrap gap-3 mt-3 text-xs text-gray-500">
+                      <span className="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded">
+                        <Clock className="w-3 h-3" /> {new Date(ticket.created_at).toLocaleDateString()}
+                      </span>
+                      {ticket.priority && (
+                        <span className={`px-2 py-1 rounded font-bold uppercase ${
+                          ticket.priority === 'emergency' ? 'bg-red-100 text-red-600' : 
+                          ticket.priority === 'high' ? 'bg-orange-100 text-orange-600' : 
+                          'bg-blue-50 text-blue-600'
+                        }`}>
+                          {ticket.priority}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {!ticket.is_resolved && (
-                  <button 
-                    onClick={() => handleResolve(ticket.id)}
-                    className="flex-shrink-0 bg-white border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition shadow-sm"
-                  >
-                    Marcar Resuelto
-                  </button>
-                )}
+                {/* ACCIONES DERECHA (SOLO LANDLORD) */}
+                <div className="flex flex-col items-end justify-center gap-2 min-w-[140px]">
+                  <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${statusConfig.color}`}>
+                    {statusConfig.label}
+                  </div>
+
+                  {/* CONTROLES DE ESTADO */}
+                  {role === 'landlord' && ticket.status !== 'cancelled' && (
+                    <div className="flex items-center gap-2 mt-2">
+                      {updatingId === ticket.id ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                      ) : (
+                        <select
+                          value={ticket.status}
+                          onChange={(e) => handleStatusChange(ticket.id, e.target.value)}
+                          className="text-xs border border-gray-300 rounded-lg px-2 py-1 bg-gray-50 hover:bg-white cursor-pointer focus:ring-2 focus:ring-primary outline-none transition"
+                        >
+                          <option value="pending">Pendiente</option>
+                          <option value="in_progress">En Proceso</option>
+                          <option value="resolved">Resuelto</option>
+                          <option value="cancelled">Cancelar</option>
+                        </select>
+                      )}
+                    </div>
+                  )}
+                </div>
+
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
