@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
-import { logout, getCurrentRole } from '../../services/authService'; // <--- IMPORTAMOS getCurrentRole
+import { logout, getCurrentRole } from '../../services/authService';
 import {
   LayoutDashboard,
   Building2,
@@ -9,17 +9,16 @@ import {
   LogOut,
   Menu,
   X,
-  Wrench
+  Wrench,
+  Wallet,      // <--- 1. NUEVO ICONO PAGOS
+  ShieldCheck  // <--- 2. NUEVO ICONO VERIFICACIÓN
 } from 'lucide-react';
 
 export default function DashboardLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-  const role = getCurrentRole(); // <--- OBTENEMOS EL ROL
-
-
-  console.log("🔍 ROL DETECTADO:", role);
+  const role = getCurrentRole();
 
   const handleLogout = () => {
     logout();
@@ -31,26 +30,37 @@ export default function DashboardLayout() {
       icon: LayoutDashboard,
       label: 'Resumen',
       path: '/dashboard',
-      roles: ['landlord', 'tenant'] // Visible para todos
+      roles: ['landlord', 'tenant']
     },
     {
       icon: Building2,
       label: 'Propiedades',
       path: '/dashboard/properties',
-      roles: ['landlord'] // Solo visible para Landlords
+      roles: ['landlord']
     },
-    // { icon: Users, label: 'Inquilinos', path: '/dashboard/tenants', roles: ['landlord'] },
     {
       icon: FileText,
       label: 'Contratos',
       path: '/dashboard/contracts',
-      roles: ['landlord', 'tenant'] // Ambos pueden ver (el back filtra)
+      roles: ['landlord', 'tenant']
+    },
+    {
+      icon: Wallet,
+      label: 'Pagos',
+      path: '/dashboard/payments',
+      roles: ['landlord', 'tenant'] // Visible para ambos
     },
     {
       icon: Wrench,
       label: 'Mantenimiento',
       path: '/dashboard/tickets',
       roles: ['landlord', 'tenant']
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Verificación',
+      path: '/dashboard/verification',
+      roles: ['tenant'] // <--- SOLO PARA INQUILINOS
     },
   ];
 
@@ -71,7 +81,7 @@ export default function DashboardLayout() {
           {/* Menu */}
           <nav className="flex-1 px-4 py-6 space-y-1">
             {menuItems.map((item) => {
-              // 1. FILTRO DE SEGURIDAD VISUAL: Si el rol no está permitido, no renderizamos nada
+              // Filtro de roles
               if (item.roles && !item.roles.includes(role)) return null;
 
               const isActive = location.pathname.startsWith(item.path) && (item.path !== '/dashboard' || location.pathname === '/dashboard');
