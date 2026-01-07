@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { DollarSign, Calendar, CreditCard, FileText, CheckCircle, Loader2, AlertTriangle, Wallet } from 'lucide-react';
+import { DollarSign, Calendar, CreditCard, CheckCircle, Loader2, AlertTriangle, Wallet } from 'lucide-react';
 import { getMyPaymentsHistory, createPayment } from '../../services/paymentService';
 import { getMyContracts } from '../../services/contractService';
-import { useAuth } from '../../context/AuthContext'; // Asegúrate de tener este hook, o usa localStorage para ver el rol
 
 export default function PaymentsPage() {
-    const { user } = useAuth(); // Necesitamos saber si es tenant o landlord
+    // CORRECCIÓN: Leemos el rol directamente del localStorage en lugar de usar AuthContext
+    // Esto evita el error de "Module not found"
+    const [userRole, setUserRole] = useState(null);
+
     const [payments, setPayments] = useState([]);
     const [contracts, setContracts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    
-    // Formulario para nuevos pagos
-    const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
 
-    // Cargar datos iniciales
+    // Formulario para nuevos pagos
+    const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
     useEffect(() => {
+        // 1. Obtener el rol al cargar
+        const role = localStorage.getItem('role');
+        setUserRole(role);
+
+        // 2. Cargar datos
         async function loadData() {
             try {
                 const [paymentsData, contractsData] = await Promise.all([
@@ -44,7 +50,7 @@ export default function PaymentsPage() {
                 payment_method: data.payment_method,
                 notes: data.notes
             });
-            
+
             // Recargar lista y limpiar form
             const updatedPayments = await getMyPaymentsHistory();
             setPayments(updatedPayments);
@@ -60,7 +66,8 @@ export default function PaymentsPage() {
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>;
 
-    const isTenant = user?.role === 'tenant';
+    // Verificamos si es inquilino usando la variable de estado
+    const isTenant = userRole === 'tenant';
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -78,7 +85,7 @@ export default function PaymentsPage() {
                     <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <Wallet className="w-5 h-5 text-primary" /> Registrar Nuevo Pago
                     </h2>
-                    
+
                     {contracts.length === 0 ? (
                         <div className="bg-yellow-50 text-yellow-800 p-4 rounded-lg flex items-center gap-2">
                             <AlertTriangle className="w-5 h-5" />
@@ -89,13 +96,13 @@ export default function PaymentsPage() {
                             {/* Selección de Contrato */}
                             <div className="col-span-1 md:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Contrato a Pagar</label>
-                                <select 
+                                <select
                                     {...register("contract_id", { required: "Selecciona un contrato" })}
                                     className="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary p-2.5 border"
                                 >
                                     {contracts.map(c => (
                                         <option key={c.id} value={c.id}>
-                                            Contrato #{c.id.slice(0,8)} - {c.unit?.unit_number || "Unidad"} (Deuda: ${c.balance ?? c.amount})
+                                            Contrato del {new Date(c.start_date).toLocaleDateString()} (Deuda: ${c.balance ?? c.amount})
                                         </option>
                                     ))}
                                 </select>
@@ -121,7 +128,7 @@ export default function PaymentsPage() {
                             {/* Método */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
-                                <select 
+                                <select
                                     {...register("payment_method", { required: true })}
                                     className="w-full border-gray-300 rounded-lg focus:ring-primary focus:border-primary p-2.5 border"
                                 >
@@ -142,8 +149,8 @@ export default function PaymentsPage() {
                                 />
                             </div>
 
-                            <button 
-                                type="submit" 
+                            <button
+                                type="submit"
                                 disabled={submitting}
                                 className="col-span-1 md:col-span-2 bg-primary text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition flex justify-center items-center gap-2"
                             >
@@ -160,7 +167,7 @@ export default function PaymentsPage() {
                 <div className="p-6 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-900">Historial de Transacciones</h2>
                 </div>
-                
+
                 {payments.length === 0 ? (
                     <div className="p-10 text-center text-gray-500">
                         No hay pagos registrados aún.
