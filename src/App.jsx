@@ -12,6 +12,8 @@ import ContractDetails from './pages/dashboard/ContractDetails';
 import CreateTicket from './pages/dashboard/CreateTicket';
 import TicketList from './pages/dashboard/TTicketList';
 import PaymentsPage from './pages/dashboard/PaymentsPage';
+import VerificationPage from './pages/dashboard/VerificationPage';
+
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -53,6 +55,8 @@ function App() {
           <Route path="tickets" element={<TicketList />} />
 
           <Route path="payments" element={<PaymentsPage />} />
+
+          <Route path="verification" element={<VerificationPage />} />
 
         </Route>
 
