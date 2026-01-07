@@ -1,219 +1,163 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  FileText, User, Calendar, DollarSign, 
-  ArrowLeft, Building2, Download, Plus, 
-  History, CheckCircle, AlertCircle 
-} from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { getContractById } from '../../services/contractService';
-import { getContractPayments } from '../../services/paymentService'; // <--- Nuevo Servicio
-import { getCurrentRole } from '../../services/authService';
-import PaymentModal from '../../components/modals/PaymentModal'; // <--- Importamos el Modal
+import { getTenantDocuments, updateDocumentStatus } from '../../services/documentService'; // Importamos el servicio
+import { Loader2, FileText, Calendar, DollarSign, User, ShieldCheck, Check, X, ExternalLink } from 'lucide-react';
 
 export default function ContractDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const role = getCurrentRole();
-  
   const [contract, setContract] = useState(null);
-  const [payments, setPayments] = useState([]); // Estado para los pagos
+  const [tenantDocs, setTenantDocs] = useState([]); // Estado para docs
   const [loading, setLoading] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false); // Control del Modal
 
-  // Función para cargar (o recargar) datos
-  async function loadData() {
-    try {
-      // 1. Cargar Contrato
-      const contractData = await getContractById(id);
-      setContract(contractData);
-
-      // 2. Cargar Pagos
-      const paymentsData = await getContractPayments(id);
-      setPayments(paymentsData);
-
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Obtenemos el rol del localStorage para saber si mostrar los controles
+  const role = localStorage.getItem('role');
+  const isLandlord = role === 'landlord';
 
   useEffect(() => {
+    async function loadData() {
+      try {
+        // 1. Cargar Contrato
+        const data = await getContractById(id);
+        setContract(data);
+
+        // 2. Si es Dueño y hay inquilino, cargar documentos
+        if (isLandlord && data.tenant_id) {
+          try {
+            const docs = await getTenantDocuments(data.tenant_id);
+            setTenantDocs(docs);
+          } catch (err) {
+            console.error("Error cargando documentos del inquilino", err);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando contrato:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
     loadData();
-  }, [id]);
+  }, [id, isLandlord]);
 
-  if (loading) return <div className="p-10 text-center">Cargando contrato...</div>;
-  if (!contract) return <div className="p-10 text-center">Contrato no encontrado</div>;
+  // Función para manejar Aprobación/Rechazo
+  const handleVerify = async (docId, newStatus) => {
+    if (!window.confirm(`¿Estás seguro de marcar este documento como ${newStatus}?`)) return;
 
-  // Cálculos visuales
-  const isDebt = contract.balance > 0;
-  const statusColor = contract.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-700";
+    try {
+      await updateDocumentStatus(docId, newStatus);
+      // Actualizar la lista localmente
+      setTenantDocs(docs => docs.map(d =>
+        d.id === docId ? { ...d, status: newStatus } : d
+      ));
+    } catch (error) {
+      alert("Error al actualizar estado");
+    }
+  };
+
+  if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>;
+  if (!contract) return <div className="text-center p-10 text-red-500">Contrato no encontrado</div>;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      
-      {/* --- HEADER Y NAVEGACIÓN --- */}
-      <div className="flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="flex items-center text-gray-500 hover:text-primary transition">
-          <ArrowLeft className="w-4 h-4 mr-1" /> Volver
-        </button>
-        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${statusColor}`}>
-          {contract.is_active ? 'Activo' : 'Inactivo'}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* --- COLUMNA IZQUIERDA: DETALLES DEL CONTRATO --- */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <FileText className="text-primary" /> Contrato de Arrendamiento
-            </h1>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Unidad */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg text-blue-600"><Building2 className="w-5 h-5" /></div>
-                <div>
-                  <p className="text-sm text-gray-500">Unidad Alquilada</p>
-                  <p className="font-medium text-gray-900">
-                    {contract.unit?.unit_number || "Unidad"} 
-                    <span className="text-gray-400 text-sm ml-1">(ID: {contract.unit_id.slice(0,6)})</span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Inquilino */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-50 rounded-lg text-purple-600"><User className="w-5 h-5" /></div>
-                <div>
-                  <p className="text-sm text-gray-500">Inquilino</p>
-                  <p className="font-medium text-gray-900">
-                    {contract.tenant?.full_name || "Nombre no disponible"}
-                  </p>
-                  <p className="text-xs text-gray-400">{contract.tenant?.email}</p>
-                </div>
-              </div>
-
-              {/* Fechas */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><Calendar className="w-5 h-5" /></div>
-                <div>
-                  <p className="text-sm text-gray-500">Duración</p>
-                  <p className="font-medium text-gray-900">
-                    {new Date(contract.start_date).toLocaleDateString()} - {new Date(contract.end_date).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              {/* Día de Pago */}
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-green-50 rounded-lg text-green-600"><CheckCircle className="w-5 h-5" /></div>
-                <div>
-                  <p className="text-sm text-gray-500">Día de Pago</p>
-                  <p className="font-medium text-gray-900">Los días {contract.payment_day} de cada mes</p>
-                </div>
-              </div>
-            </div>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Encabezado */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-blue-100 p-2 rounded-lg">
+            <FileText className="w-6 h-6 text-primary" />
           </div>
-
-          {/* --- TABLA DE HISTORIAL DE PAGOS --- */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                <History className="w-5 h-5 text-gray-400" /> Historial de Pagos
-              </h3>
-            </div>
-            
-            {payments.length === 0 ? (
-              <div className="p-10 text-center text-gray-400 text-sm">No hay pagos registrados aún.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-gray-50 text-gray-500 font-medium">
-                    <tr>
-                      <th className="px-6 py-3">Fecha</th>
-                      <th className="px-6 py-3">Método</th>
-                      <th className="px-6 py-3">Nota</th>
-                      <th className="px-6 py-3 text-right">Monto</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {payments.map((pay) => (
-                      <tr key={pay.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-3 text-gray-900">{new Date(pay.payment_date).toLocaleDateString()}</td>
-                        <td className="px-6 py-3 text-gray-600">{pay.payment_method}</td>
-                        <td className="px-6 py-3 text-gray-500 italic truncate max-w-xs">{pay.notes || "-"}</td>
-                        <td className="px-6 py-3 text-right font-bold text-green-600">
-                          +${Number(pay.amount).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Contrato #{contract.id.slice(0, 8)}</h1>
+            <span className={`px-2 py-1 text-xs rounded-full ${contract.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+              {contract.is_active ? 'Activo' : 'Inactivo'}
+            </span>
           </div>
         </div>
 
-        {/* --- COLUMNA DERECHA: TARJETA FINANCIERA --- */}
-        <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
-              <DollarSign className="w-24 h-24 text-primary" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <div className="flex items-center gap-3 text-gray-700">
+            <User className="w-5 h-5 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Inquilino</p>
+              <p className="font-medium">{contract.tenant?.full_name || contract.tenant?.email || "Sin asignar"}</p>
             </div>
-
-            <h3 className="text-gray-500 font-medium mb-1">Estado Financiero</h3>
-            
-            {/* Balance Gigante */}
-            <div className="mb-6">
-              <p className="text-sm text-gray-400 mb-1">Saldo Pendiente</p>
-              <div className={`text-4xl font-extrabold ${isDebt ? 'text-red-500' : 'text-green-500'} flex items-center`}>
-                ${Number(contract.balance).toFixed(2)}
-                {isDebt && <AlertCircle className="w-6 h-6 ml-2 text-red-400 animate-pulse" />}
-              </div>
+          </div>
+          <div className="flex items-center gap-3 text-gray-700">
+            <Calendar className="w-5 h-5 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Vigencia</p>
+              <p className="font-medium">
+                {new Date(contract.start_date).toLocaleDateString()} - {new Date(contract.end_date).toLocaleDateString()}
+              </p>
             </div>
-
-            <div className="space-y-3 pt-4 border-t border-gray-100">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Canon Mensual</span>
-                <span className="font-bold text-gray-900">${contract.amount}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Pagos Registrados</span>
-                <span className="font-bold text-green-600">{payments.length}</span>
-              </div>
+          </div>
+          <div className="flex items-center gap-3 text-gray-700">
+            <DollarSign className="w-5 h-5 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">Monto Mensual</p>
+              <p className="font-medium text-green-600">${contract.amount}</p>
             </div>
-
-            {/* BOTÓN REGISTRAR PAGO (SOLO LANDLORD) */}
-            {role === 'landlord' && (
-              <button 
-                onClick={() => setShowPaymentModal(true)}
-                className="w-full mt-6 bg-primary text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 flex items-center justify-center gap-2"
-              >
-                <Plus className="w-5 h-5" /> Registrar Pago
-              </button>
-            )}
-
-            {/* Botón Descargar (Visual) */}
-            <button className="w-full mt-3 bg-white border border-gray-200 text-gray-600 py-3 rounded-xl font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2">
-              <Download className="w-4 h-4" /> Descargar Contrato
-            </button>
-
           </div>
         </div>
       </div>
 
-      {/* --- RENDERIZADO DEL MODAL --- */}
-      {showPaymentModal && (
-        <PaymentModal 
-          contractId={contract.id}
-          onClose={() => setShowPaymentModal(false)}
-          onPaymentSuccess={loadData} // Cuando guarde, recarga todo
-        />
+      {/* SECCIÓN DE VERIFICACIÓN (SOLO DUEÑOS) */}
+      {isLandlord && (
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-primary" /> Documentos del Inquilino
+          </h2>
+
+          {tenantDocs.length === 0 ? (
+            <p className="text-gray-500 italic">El inquilino no ha subido documentos aún.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {tenantDocs.map(doc => (
+                <div key={doc.id} className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition bg-gray-50">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-semibold text-gray-800 capitalize">
+                      {doc.document_type}
+                    </span>
+                    {/* Badge de Estado */}
+                    <span className={`px-2 py-0.5 text-xs rounded-full border ${doc.status === 'verified' ? 'bg-green-100 text-green-700 border-green-200' :
+                        doc.status === 'rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                          'bg-yellow-100 text-yellow-700 border-yellow-200'
+                      }`}>
+                      {doc.status}
+                    </span>
+                  </div>
+
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-sm hover:underline flex items-center gap-1 mb-4"
+                  >
+                    <ExternalLink className="w-3 h-3" /> Ver Archivo
+                  </a>
+
+                  {/* Botones de Acción */}
+                  {doc.status === 'pending' && (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={() => handleVerify(doc.id, 'verified')}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded text-sm flex justify-center items-center gap-1"
+                      >
+                        <Check className="w-3 h-3" /> Aprobar
+                      </button>
+                      <button
+                        onClick={() => handleVerify(doc.id, 'rejected')}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white py-1.5 rounded text-sm flex justify-center items-center gap-1"
+                      >
+                        <X className="w-3 h-3" /> Rechazar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
-
     </div>
   );
 }
