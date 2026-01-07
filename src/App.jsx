@@ -11,6 +11,7 @@ import ContractsList from './pages/dashboard/ContractList';
 import ContractDetails from './pages/dashboard/ContractDetails';
 import CreateTicket from './pages/dashboard/CreateTicket';
 import TicketList from './pages/dashboard/ticketList';
+import PaymentsPage from './pages/dashboard/PaymentsPage';
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
