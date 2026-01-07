@@ -1,24 +1,31 @@
 import api from './api';
 
 export const getMyProperties = async () => {
-  // Llama al endpoint GET /properties del backend
-  const response = await api.get('/properties');
-  return response.data;
+  try {
+    // ⚠️ CAMBIO CLAVE: Agregamos la barra '/' al final
+    // Esto evita que el backend haga el redirect que rompe el CORS
+    const response = await api.get('/properties/'); 
+    console.log("📡 Propiedades cargadas:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error en getMyProperties:", error);
+    throw error;
+  }
 };
 
 export const createProperty = async (propertyData) => {
-  const response = await api.post('/properties', propertyData);
+  // También aquí agregamos la barra por seguridad
+  const response = await api.post('/properties/', propertyData);
   return response.data;
 };
 
 export const getPropertyById = async (id) => {
-  // Backend actual devuelve lista completa, filtramos en cliente por ahora
-  const response = await api.get('/properties');
-  const property = response.data.find(p => p.id === id);
+  // Aquí también
+  const response = await api.get('/properties/');
+  const property = response.data.find(p => String(p.id) === String(id));
   return property;
 };
 
-// --- NUEVA FUNCIÓN PARA EDITAR ---
 export const updateUnit = async (unitId, updateData) => {
   const response = await api.put(`/properties/units/${unitId}`, updateData);
   return response.data;
