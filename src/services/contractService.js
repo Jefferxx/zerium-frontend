@@ -6,7 +6,7 @@ export const createContract = async (contractData) => {
   return response.data;
 };
 
-// Obtener todos los contratos (RENOMBRADO A getMyContracts)
+// Obtener todos los contratos del usuario
 export const getMyContracts = async () => {
   const response = await api.get('/contracts/');
   return response.data;

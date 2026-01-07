@@ -51,6 +51,8 @@ function App() {
           <Route path="tickets/new" element={<CreateTicket />} />
           <Route path="tickets" element={<TicketList />} />
 
+          <Route path="payments" element={<PaymentsPage />} />
+
         </Route>
 
         {/* Redirección por defecto */}
