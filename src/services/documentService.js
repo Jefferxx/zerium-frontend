@@ -2,7 +2,14 @@ import api from './api';
 
 // 1. Subir documento
 export const uploadDocument = async (formData) => {
-    const response = await api.post('/documents/upload', formData);
+    // CORRECCIÓN ERROR 422:
+    // Sobrescribimos el header 'Content-Type' para esta petición específica.
+    // Esto permite que el navegador envíe correctamente el archivo como 'multipart/form-data'.
+    const response = await api.post('/documents/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
     return response.data;
 };
 
