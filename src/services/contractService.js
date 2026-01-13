@@ -18,9 +18,14 @@ export const getContractById = async (id) => {
   return response.data;
 };
 
-// --- NUEVA FUNCIÓN: Firmar contrato ---
+// Firmar contrato (Inquilino)
 export const signContract = async (id) => {
-  // Llama al endpoint que creamos en el backend para cambiar el estado a 'active'
   const response = await api.post(`/contracts/${id}/sign`);
+  return response.data;
+};
+
+// Finalizar contrato (Dueño)
+export const finalizeContract = async (id) => {
+  const response = await api.post(`/contracts/${id}/finalize`);
   return response.data;
 };
