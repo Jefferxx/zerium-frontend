@@ -24,8 +24,14 @@ export const signContract = async (id) => {
   return response.data;
 };
 
-// Finalizar contrato (Dueño)
+// Finalizar contrato - Activar (Dueño)
 export const finalizeContract = async (id) => {
   const response = await api.post(`/contracts/${id}/finalize`);
+  return response.data;
+};
+
+// Terminar contrato - Liberar (Dueño) - <--- NUEVA FUNCIÓN
+export const terminateContract = async (id) => {
+  const response = await api.post(`/contracts/${id}/terminate`);
   return response.data;
 };

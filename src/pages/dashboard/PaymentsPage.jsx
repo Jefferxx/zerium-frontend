@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { DollarSign, Calendar, CreditCard, CheckCircle, Loader2, AlertTriangle, Wallet, Check } from 'lucide-react';
+import { DollarSign, Calendar, CreditCard, CheckCircle, Loader2, AlertTriangle, Wallet, Check, Building, User } from 'lucide-react';
 import { getMyPaymentsHistory, createPayment } from '../../services/paymentService';
 import { getMyContracts } from '../../services/contractService';
 
@@ -199,7 +199,7 @@ export default function PaymentsPage() {
                 </div>
             )}
 
-            {/* TABLA DE HISTORIAL */}
+            {/* TABLA DE HISTORIAL - ACTUALIZADA CON COLUMNAS DINÁMICAS */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
                     <h2 className="text-lg font-bold text-gray-900">Historial de Transacciones</h2>
@@ -215,6 +215,15 @@ export default function PaymentsPage() {
                             <thead className="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
                                 <tr>
                                     <th className="px-6 py-4">Fecha</th>
+
+                                    {/* COLUMNAS EXTRAS PARA DUEÑO */}
+                                    {!isTenant && (
+                                        <>
+                                            <th className="px-6 py-4">Propiedad</th>
+                                            <th className="px-6 py-4">Inquilino</th>
+                                        </>
+                                    )}
+
                                     <th className="px-6 py-4">Método</th>
                                     <th className="px-6 py-4">Notas</th>
                                     <th className="px-6 py-4 text-right">Monto</th>
@@ -223,10 +232,34 @@ export default function PaymentsPage() {
                             <tbody className="divide-y divide-gray-100">
                                 {payments.map((p) => (
                                     <tr key={p.id} className="hover:bg-gray-50 transition">
-                                        <td className="px-6 py-4 flex items-center gap-2 text-gray-700">
+                                        <td className="px-6 py-4 flex items-center gap-2 text-gray-700 whitespace-nowrap">
                                             <Calendar className="w-4 h-4 text-gray-400" />
                                             {new Date(p.payment_date).toLocaleDateString()}
                                         </td>
+
+                                        {/* CELDAS EXTRAS PARA DUEÑO */}
+                                        {!isTenant && (
+                                            <>
+                                                <td className="px-6 py-4 text-gray-900">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium flex items-center gap-1">
+                                                            <Building className="w-3 h-3 text-gray-400" />
+                                                            {p.property_name || "-"}
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">
+                                                            Unidad: {p.unit_number || "-"}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 text-gray-600">
+                                                    <div className="flex items-center gap-1">
+                                                        <User className="w-3 h-3 text-gray-400" />
+                                                        {p.tenant_name || "Desc."}
+                                                    </div>
+                                                </td>
+                                            </>
+                                        )}
+
                                         <td className="px-6 py-4">
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
                                                 <CreditCard className="w-3 h-3" /> {p.payment_method}
